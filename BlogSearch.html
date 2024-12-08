@@ -1,0 +1,197 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Blog Search</title>
+    <style>
+        :root {
+            --primary-color: #333;
+            --hover-color: #000;
+            --background-color: #f0f4f8;
+            --card-background: #f9f9f9;
+            --border-color: #ddd;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(to right, var(--background-color), #eaeaea);
+            color: var(--primary-color);
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+        }
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px var(--shadow-color);
+            padding: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .search-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        }
+        .search-box {
+            padding: 15px;
+            border: 2px solid var(--primary-color);
+            border-radius: 5px;
+            width: 80%;
+            margin: 0 auto 15px auto; 
+            display: block;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .search-box:focus {
+            border-color: var(--hover-color);
+            box-shadow: 0 0 5px var(--shadow-color);
+            outline: none;
+        }
+        .filter-container {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-container label {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .filter-container select {
+            padding: 10px;
+            border: 2px solid var(--primary-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .filter-container select:focus {
+            border-color: var(--hover-color);
+            box-shadow: 0 0 5px var(--shadow-color);
+            outline: none;
+        }
+        .results {
+            max-height: 400px;
+            overflow-y: auto;
+            border-top: 2px solid var(--primary-color);
+            margin-top: 20px;
+            padding-top: 10px;
+            transition: background 0.3s;
+        }
+        .result-item {
+            padding: 15px;
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background 0.3s, transform 0.2s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+        .result-item:hover {
+            background: #eaeaea;
+            transform: translateY(-2px);
+        }
+        .result-item:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 5px 0 0 5px;
+            transition: width 0.3s ease;
+        }
+        .result-item:hover:before {
+            width: 10px;
+        }
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .search-box, .filter-container select {
+                font-size: 0.9rem;
+            }
+            .result-item {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Blog Search</h1>
+
+<div class="search-container" role="search" aria-label="Blog Search">
+    <input type="text" id="search" class="search-box" placeholder="Search for articles, tutorials, or news..." aria-label="Search articles">
+
+    <div class="filter-container">
+        <label for="filter">Filter by:</label>
+        <select id="filter" aria-label="Filter results by type">
+            <option value="all">All</option>
+            <option value="articles">Articles</option>
+            <option value="tutorials">Tutorials</option>
+            <option value="news">News</option>
+        </select>
+    </div>
+
+    <div class="results" id="results" role="listbox" aria-live="polite">
+      
+    </div>
+</div>
+
+<script>
+    const data = [
+        { title: "How to Learn JavaScript", type: "tutorials" },
+        { title: "Understanding CSS Flexbox", type: "tutorials" },
+        { title: "Latest Tech News: AI Revolution", type: "news" },
+        { title: "10 Tips for Effective Blogging", type: "articles" },
+        { title: "The Future of Web Development", type: "articles" },
+        { title: "CSS Grid vs Flexbox: What's Best?", type: "tutorials" },
+        { title: "Breaking News: Tech Innovations 2023", type: "news" },
+        { title: "Writing Engaging Content", type: "articles" },
+        { title: "Mastering Responsive Design", type: "tutorials" },
+        { title: "SEO Best Practices for 2023", type: "articles" },
+    ];
+
+    const searchInput = document.getElementById('search');
+    const filterSelect = document.getElementById('filter');
+    const resultsContainer = document.getElementById('results');
+
+    function displayResults() {
+        const query = searchInput.value.toLowerCase();
+        const filter = filterSelect.value;
+
+        const filteredData = data.filter(item => {
+            const matchesSearch = item.title.toLowerCase().includes(query);
+            const matchesFilter = filter === 'all' || item.type === filter;
+            return matchesSearch && matchesFilter;
+        });
+
+        resultsContainer.innerHTML = filteredData.map(item => 
+            `<div class="result-item" role="option">${item.title}</div>`
+        ).join('') || '<div class="no-results">No results found</div>';
+    }
+
+    searchInput.addEventListener('input', displayResults);
+    filterSelect.addEventListener('change', displayResults);
+</script>
+
+
+
+</body></html>
